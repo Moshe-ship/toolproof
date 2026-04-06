@@ -7,6 +7,7 @@ Usage:
 
 from __future__ import annotations
 
+import html
 import json
 from datetime import datetime
 from typing import Any
@@ -14,6 +15,11 @@ from typing import Any
 from toolproof.receipt import Receipt, ReceiptStore
 from toolproof.trust import TrustReport, TrustScore
 from toolproof.verifier import Verdict, VerificationResult
+
+
+def _esc(value: Any) -> str:
+    """Escape HTML to prevent XSS."""
+    return html.escape(str(value))
 
 
 def generate_html_report(
@@ -53,9 +59,9 @@ def generate_html_report(
         color = {"verified": "#22c55e", "unverified": "#eab308", "tampered": "#ef4444"}[r.verdict.value]
         verification_rows += f"""
         <tr>
-            <td>{r.claim_tool}</td>
-            <td><span style="color:{color};font-weight:bold">{r.verdict.value.upper()}</span></td>
-            <td style="color:#666">{r.details}</td>
+            <td>{_esc(r.claim_tool)}</td>
+            <td><span style="color:{color};font-weight:bold">{_esc(r.verdict.value.upper())}</span></td>
+            <td style="color:#666">{_esc(r.details)}</td>
         </tr>"""
 
     # Build tool rows
@@ -64,7 +70,7 @@ def generate_html_report(
         error_badge = f'<span style="color:#ef4444">{ts["errors"]} errors</span>' if ts["errors"] else ""
         tool_rows += f"""
         <tr>
-            <td><code>{ts["name"]}</code></td>
+            <td><code>{_esc(ts["name"])}</code></td>
             <td>{ts["count"]}</td>
             <td>{ts["avg_duration_ms"]}ms</td>
             <td>{error_badge}</td>
@@ -122,7 +128,7 @@ def generate_html_report(
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title}</title>
+<title>{_esc(title)}</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{ font-family: -apple-system, system-ui, sans-serif; background: #0a0a0a; color: #e5e5e5; padding: 2rem; max-width: 900px; margin: 0 auto; }}

@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ToolProof -- Agent Tool Verification</title>
+<meta name="description" content="Agents lie about tool calls. ToolProof catches them. CLI tool for verifying agent tool execution with cryptographic receipts.">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0a;
+  --fg: #e5e5e5;
+  --fg-dim: #a3a3a3;
+  --fg-muted: #737373;
+  --border: #262626;
+  --surface: #141414;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Fira Code', Menlo, Consolas, monospace;
+  --sans: -apple-system, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: var(--green); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code, pre {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+}
+
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ---- HERO ---- */
+.hero {
+  padding: 6rem 0 4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  padding: 0.25rem 0.75rem;
+  border-radius: 2px;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  max-width: 600px;
+}
+
+.hero p {
+  color: var(--fg-dim);
+  font-size: 1.05rem;
+  max-width: 540px;
+  margin-bottom: 2rem;
+}
+
+.install-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+}
+
+.install-block .prompt { color: var(--fg-muted); user-select: none; }
+.install-block .cmd { color: var(--green); }
+
+/* ---- SECTION ---- */
+section {
+  padding: 4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+section:last-of-type { border-bottom: none; }
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+section h2 {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+
+section p {
+  color: var(--fg-dim);
+  max-width: 600px;
+}
+
+section p + p { margin-top: 0.75rem; }
+
+/* ---- PROBLEM ---- */
+.stat {
+  font-family: var(--mono);
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 700;
+  color: var(--red);
+  margin: 1.5rem 0 0.5rem;
+}
+
+.stat-label {
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ---- HOW IT WORKS ---- */
+.flow {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.flow-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.flow-num {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  min-width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.flow-content h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.flow-content p {
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+}
+
+.flow-diagram {
+  margin-top: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--fg-dim);
+  line-height: 1.8;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.flow-diagram .g { color: var(--green); }
+.flow-diagram .r { color: var(--red); }
+.flow-diagram .d { color: var(--fg-muted); }
+
+/* ---- FEATURES GRID ---- */
+.features-grid {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+@media (min-width: 560px) {
+  .features-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (min-width: 768px) {
+  .features-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+.feature {
+  background: var(--surface);
+  padding: 1.25rem 1.25rem;
+}
+
+.feature h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  font-family: var(--mono);
+}
+
+.feature p {
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  line-height: 1.5;
+}
+
+/* ---- CODE BLOCKS ---- */
+.code-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+.code-block + .code-block { margin-top: 0.5rem; }
+
+.code-header {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--bg);
+}
+
+.code-block pre {
+  padding: 1rem;
+  overflow-x: auto;
+  line-height: 1.7;
+}
+
+.code-block .prompt { color: var(--fg-muted); }
+.code-block .cmd { color: var(--fg); }
+.code-block .comment { color: var(--fg-muted); font-style: italic; }
+.code-block .flag { color: var(--green); }
+.code-block .output { color: var(--fg-dim); }
+
+/* ---- TRUST SCORE TABLE ---- */
+.trust-table {
+  margin-top: 2rem;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.trust-table th,
+.trust-table td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.trust-table th {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--surface);
+}
+
+.trust-table td:first-child {
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+.trust-table tr:last-child td { border-bottom: none; }
+
+.grade-a { color: var(--green); }
+.grade-b { color: var(--green); }
+.grade-c { color: var(--yellow); }
+.grade-d { color: var(--red); }
+.grade-f { color: var(--red); }
+
+.trust-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* ---- FOOTER ---- */
+footer {
+  padding: 3rem 0;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-content a { color: var(--fg-dim); }
+.footer-content a:hover { color: var(--green); }
+
+.footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: center;
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 480px) {
+  .hero { padding: 4rem 0 3rem; }
+  section { padding: 3rem 0; }
+  .install-block { font-size: 0.8rem; padding: 0.6rem 0.8rem; }
+  .flow-step { flex-direction: column; gap: 0.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="container">
+  <header class="hero">
+    <div class="hero-badge">v0.1 -- agent tool verification cli</div>
+    <h1>Agents lie about tool calls. ToolProof catches them.</h1>
+    <p>Cryptographic receipts for every tool invocation. Verify what your agent actually did -- not what it claims it did.</p>
+    <div class="install-block">
+      <span class="prompt">$</span>
+      <span class="cmd">pip install toolproof</span>
+    </div>
+  </header>
+</div>
+
+<!-- THE PROBLEM -->
+<div class="container">
+  <section>
+    <div class="section-label">The Problem</div>
+    <h2>Your agent says it called the tool. It didn't.</h2>
+    <div class="stat">91.1%</div>
+    <div class="stat-label">tool hallucination rate under adversarial conditions</div>
+    <p>LLM agents fabricate tool calls, return plausible-looking results from tools they never invoked, and confidently report success on operations that never happened.</p>
+    <p>There is no standard mechanism to verify whether an agent actually executed a tool call, invoked the correct parameters, or received the response it claims. Until now.</p>
+  </section>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="container">
+  <section>
+    <div class="section-label">How It Works</div>
+    <h2>Intercept. Receipt. Verify.</h2>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <h3>Intercept</h3>
+          <p>ToolProof sits between your agent and real tools -- as an HTTP proxy, SDK patch, or OpenClaw hook. Zero changes to your agent code.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <h3>Receipt</h3>
+          <p>Every tool call generates a cryptographic receipt: tool name, parameters, response, timestamp, and hash. Stored locally in SQLite.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <h3>Verify</h3>
+          <p>Compare what the agent reported against what actually happened. Each call is scored: VERIFIED, UNVERIFIED, or TAMPERED.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-diagram"><span class="d">Agent</span> ----&gt; <span class="g">ToolProof Proxy</span> ----&gt; <span class="d">Real Tool</span>
+               |
+         <span class="g">receipt generated</span>
+               |
+         <span class="d">stored in SQLite</span>
+               |
+         <span class="g">verified later</span>
+               |
+     <span class="g">VERIFIED</span>  /  <span class="d">UNVERIFIED</span>  /  <span class="r">TAMPERED</span></div>
+  </section>
+</div>
+
+<!-- FEATURES -->
+<div class="container">
+  <section>
+    <div class="section-label">Features</div>
+    <h2>Everything you need to audit agent behavior.</h2>
+
+    <div class="features-grid">
+      <div class="feature">
+        <h3>HTTP Proxy</h3>
+        <p>Zero-config interception. Point your agent at the proxy, ToolProof handles the rest.</p>
+      </div>
+      <div class="feature">
+        <h3>SDK Auto-Patch</h3>
+        <p>One-line patch for OpenAI and Anthropic SDKs. No proxy needed.</p>
+      </div>
+      <div class="feature">
+        <h3>OpenClaw Native</h3>
+        <p>First-class hook and plugin support for OpenClaw agents.</p>
+      </div>
+      <div class="feature">
+        <h3>Claude Code Import</h3>
+        <p>Read Claude Code session logs directly. Audit past sessions retroactively.</p>
+      </div>
+      <div class="feature">
+        <h3>Pre-Execution Gating</h3>
+        <p>AEGIS-style policy engine. Block or flag tool calls before they execute.</p>
+      </div>
+      <div class="feature">
+        <h3>Token Cost Tracking</h3>
+        <p>Per-call USD cost attribution. Know exactly what each tool invocation costs.</p>
+      </div>
+      <div class="feature">
+        <h3>HTML Reports</h3>
+        <p>Shareable trust reports. Send a link, not a log file.</p>
+      </div>
+      <div class="feature">
+        <h3>CI Integration</h3>
+        <p>GitHub Action ready. Fail builds when trust score drops below threshold.</p>
+      </div>
+      <div class="feature">
+        <h3>Hermes + OpenClaw</h3>
+        <p>Native support for Hermes agent framework and OpenClaw skill ecosystem.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- QUICK START -->
+<div class="container">
+  <section>
+    <div class="section-label">Quick Start</div>
+    <h2>Four commands. That's it.</h2>
+
+    <div class="code-block">
+      <div class="code-header">Wrap any agent</div>
+      <pre><span class="prompt">$</span> <span class="cmd">toolproof wrap</span> <span class="flag">--</span> <span class="cmd">python agent.py</span>
+<span class="output">  [toolproof] intercepting tool calls...</span>
+<span class="output">  [toolproof] 14 calls captured, 14 verified</span>
+<span class="output">  [toolproof] trust score: A (1.00)</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">Run as HTTP proxy</div>
+      <pre><span class="prompt">$</span> <span class="cmd">toolproof proxy</span> <span class="flag">--target</span> <span class="cmd">http://localhost:3000</span>
+<span class="output">  [toolproof] proxy listening on :8080</span>
+<span class="output">  [toolproof] forwarding to http://localhost:3000</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">Audit Claude Code sessions</div>
+      <pre><span class="prompt">$</span> <span class="cmd">toolproof import-claude</span>
+<span class="output">  [toolproof] found 3 sessions</span>
+<span class="output">  [toolproof] 247 tool calls imported</span>
+<span class="output">  [toolproof] 231 verified, 12 unverified, 4 tampered</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">CI pipeline gate</div>
+      <pre><span class="prompt">$</span> <span class="cmd">toolproof ci</span> <span class="flag">--min-trust</span> <span class="cmd">0.8</span>
+<span class="output">  [toolproof] trust score: 0.94 -- PASS</span></pre>
+    </div>
+  </section>
+</div>
+
+<!-- TRUST SCORE -->
+<div class="container">
+  <section>
+    <div class="section-label">Trust Score</div>
+    <h2>A single grade for agent reliability.</h2>
+    <p>The trust score is the ratio of verified tool calls to total claimed calls, weighted by call criticality. Every session gets a letter grade.</p>
+
+    <div class="trust-table-wrap">
+      <table class="trust-table">
+        <thead>
+          <tr>
+            <th>Grade</th>
+            <th>Score</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="grade-a">A</td>
+            <td>0.95 -- 1.00</td>
+            <td>All or nearly all tool calls verified. High confidence.</td>
+          </tr>
+          <tr>
+            <td class="grade-b">B</td>
+            <td>0.85 -- 0.94</td>
+            <td>Most calls verified. Minor gaps, no tampering detected.</td>
+          </tr>
+          <tr>
+            <td class="grade-c">C</td>
+            <td>0.70 -- 0.84</td>
+            <td>Significant unverified calls. Review recommended.</td>
+          </tr>
+          <tr>
+            <td class="grade-d">D</td>
+            <td>0.50 -- 0.69</td>
+            <td>Majority of calls unverified or tampered. Do not trust output.</td>
+          </tr>
+          <tr>
+            <td class="grade-f">F</td>
+            <td>Below 0.50</td>
+            <td>Agent is fabricating tool calls. Output is unreliable.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<div class="container">
+  <footer>
+    <div class="footer-content">
+      <div class="footer-row">
+        <span>toolproof</span>
+        <a href="https://github.com/moshe-ship/toolproof">GitHub</a>
+        <span>MIT License</span>
+      </div>
+      <div class="footer-row">
+        <span>Built by Musa the Carpenter</span>
+        <span>Thanks to the Saudi AI Community</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+</body>
+</html>
