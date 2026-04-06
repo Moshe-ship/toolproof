@@ -22,7 +22,10 @@ def _canonical(obj: Any) -> str:
 
 # Keys that should be redacted from receipt arguments/responses
 _SENSITIVE_KEYS = re.compile(
-    r"(secret|password|passwd|token|api.?key|authorization|cookie|credential|private.?key)",
+    r"(secret|password|passwd|token|api.?key|authorization|cookie|credential|private.?key"
+    r"|access.?key.?id|session.?id|sessionid|auth|bearer|jwt|refresh.?token"
+    r"|client.?secret|signing.?key|encryption.?key|ssh.?key|pgp.?key"
+    r"|aws.?secret|gcp.?key|azure.?key|stripe.?key|webhook.?secret)",
     re.IGNORECASE,
 )
 _REDACTED = "[REDACTED]"

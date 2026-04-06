@@ -39,7 +39,11 @@ def _save_config(config: dict) -> None:
 
 
 def _get_store(path: str | None) -> ReceiptStore:
-    store_path = Path(path).resolve() if path else DEFAULT_STORE_PATH
+    if path:
+        from toolproof.safepath import validate_store_path
+        store_path = validate_store_path(path)
+    else:
+        store_path = DEFAULT_STORE_PATH
     return ReceiptStore(store_path)
 
 
@@ -157,8 +161,14 @@ def report(path: str | None, json_output: bool, html: bool, output: str | None) 
         from toolproof.html_report import generate_html_report
         html_content = generate_html_report(store)
         if output:
-            Path(output).write_text(html_content, encoding="utf-8")
-            console.print(f"[green]Report written to {output}[/green]")
+            from toolproof.safepath import validate_output_path
+            try:
+                safe_output = validate_output_path(output)
+            except ValueError as e:
+                console.print(f"[red]{e}[/red]")
+                sys.exit(1)
+            safe_output.write_text(html_content, encoding="utf-8")
+            console.print(f"[green]Report written to {safe_output}[/green]")
         else:
             click.echo(html_content)
         return
@@ -355,10 +365,19 @@ def import_claude(session: str | None, limit: int, path: str | None, secret: str
             console.print("[red]Invalid session ID (alphanumeric, hyphens, underscores only).[/red]")
             sys.exit(1)
         claude_dir = Path.home() / ".claude" / "projects"
-        matches = [
+        from toolproof.safepath import validate_import_path
+        raw_matches = [
             p for p in claude_dir.rglob("*.jsonl")
             if p.stem.startswith(session)
         ]
+        # Validate each match resolves within claude_dir (no symlink escape)
+        matches = []
+        for m in raw_matches:
+            try:
+                validate_import_path(m, claude_dir)
+                matches.append(m)
+            except ValueError:
+                continue
         if not matches:
             console.print(f"[red]Session not found: {session}[/red]")
             sys.exit(1)
@@ -490,3 +509,116 @@ def github_action() -> None:
     """Print a GitHub Action YAML template for CI integration."""
     from toolproof.watch import GITHUB_ACTION_YAML
     click.echo(GITHUB_ACTION_YAML)
+
+
+# =========================================================================
+# Analytics / Feedback commands (eval-driven optimization)
+# =========================================================================
+
+@main.command("analyze")
+@click.option("--path", type=click.Path(), help="Receipt store path")
+@click.option("--json-output", is_flag=True, help="Output as JSON")
+def analyze_cmd(path: str | None, json_output: bool) -> None:
+    """Analyze receipt history for patterns and optimization opportunities.
+
+    Shows which tools fail most, cost hotspots, cache efficiency,
+    and actionable recommendations.
+    """
+    from toolproof.analytics import Analyzer
+
+    store = _get_store(path)
+    if store.count() == 0:
+        console.print("[dim]No receipts to analyze.[/dim]")
+        return
+
+    analyzer = Analyzer(store)
+    report = analyzer.full_report()
+
+    if json_output:
+        click.echo(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
+        return
+
+    console.print(f"[bold]ToolProof Analytics[/bold]")
+    console.print(f"  Receipts: {report.total_receipts}")
+    console.print(f"  Errors: {report.total_errors}")
+    console.print(f"  Trust: {report.trust_score:.1%}")
+    console.print(f"  Cost: ${report.total_cost:.4f}")
+    console.print(f"  Cache efficiency: {report.cache_efficiency:.1%}")
+    console.print()
+
+    if report.worst_tools:
+        console.print("[bold]Worst Tools (by error rate):[/bold]")
+        for t in report.worst_tools:
+            console.print(f"  [red]{t.name}[/red]: {t.error_rate:.0%} errors ({t.errors}/{t.total_calls})")
+        console.print()
+
+    if report.cost_hotspots:
+        console.print("[bold]Cost Hotspots:[/bold]")
+        for t in report.cost_hotspots:
+            if t.total_cost > 0:
+                console.print(f"  {t.name}: ${t.total_cost:.4f} ({t.total_calls} calls)")
+        console.print()
+
+    if report.cost_anomalies:
+        console.print("[bold]Cost Anomalies:[/bold]")
+        for a in report.cost_anomalies[:3]:
+            console.print(f"  [yellow]{a.tool_name}[/yellow]: ${a.cost_usd:.4f} ({a.multiplier:.0f}x avg)")
+            if a.possible_cause:
+                console.print(f"    {a.possible_cause}")
+        console.print()
+
+    if report.recommendations:
+        console.print("[bold]Recommendations:[/bold]")
+        for r in report.recommendations:
+            console.print(f"  - {r}")
+
+
+@main.command("feedback")
+@click.option("--path", type=click.Path(), help="Receipt store path")
+@click.option("--format", "fmt", type=click.Choice(["json", "hermes", "openclaw"]),
+              default="json", help="Output format")
+@click.option("--output", "-o", type=click.Path(), help="Write to file")
+def feedback_cmd(path: str | None, fmt: str, output: str | None) -> None:
+    """Generate optimization feedback from receipt analytics.
+
+    Produces actionable configuration changes for your agent framework.
+    Closes the eval loop: run -> record -> analyze -> feedback -> improve.
+
+    Examples:
+
+        toolproof feedback
+
+        toolproof feedback --format hermes --output ~/.hermes/feedback.json
+
+        toolproof feedback --format openclaw --output ~/.openclaw/feedback.json
+    """
+    from toolproof.analytics import Analyzer
+    from toolproof.feedback import FeedbackGenerator
+
+    store = _get_store(path)
+    if store.count() == 0:
+        console.print("[dim]No receipts to generate feedback from.[/dim]")
+        return
+
+    analyzer = Analyzer(store)
+    report = analyzer.full_report()
+    generator = FeedbackGenerator(report)
+    feedback = generator.generate()
+
+    if output:
+        from toolproof.safepath import validate_output_path
+        try:
+            safe_output = validate_output_path(output)
+        except ValueError as e:
+            console.print(f"[red]{e}[/red]")
+            sys.exit(1)
+
+        if fmt == "hermes":
+            generator.write_hermes_feedback(safe_output)
+        elif fmt == "openclaw":
+            generator.write_openclaw_feedback(safe_output)
+        else:
+            generator.write_generic(safe_output)
+        console.print(f"[green]Feedback written to {safe_output}[/green]")
+    else:
+        click.echo(feedback.to_json())
