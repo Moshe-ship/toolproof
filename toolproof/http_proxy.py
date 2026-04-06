@@ -32,7 +32,7 @@ from typing import Any, Optional
 import httpx
 
 from toolproof.proxy import ToolProxy
-from toolproof.receipt import ReceiptStore
+from toolproof.receipt import ReceiptStore, redact_sensitive
 
 
 class ProxyHandler(BaseHTTPRequestHandler):
@@ -87,8 +87,13 @@ class ProxyHandler(BaseHTTPRequestHandler):
         proxy = self.__class__.tool_proxy
         target = self.__class__.target_url
 
-        # Build target URL
-        url = urljoin(target, self.path)
+        # Build target URL — SECURITY: prevent SSRF via path override
+        url = target.rstrip("/") + self.path
+        parsed = urlparse(url)
+        target_parsed = urlparse(target)
+        if parsed.netloc != target_parsed.netloc or parsed.scheme != target_parsed.scheme:
+            self.send_error(400, "Bad request")
+            return
 
         # Read request body
         content_length = int(self.headers.get("Content-Length", 0))
@@ -111,14 +116,14 @@ class ProxyHandler(BaseHTTPRequestHandler):
             if k.lower() not in skip_headers
         }
 
-        # Record arguments
+        # Record arguments — SECURITY: redact sensitive keys
         arguments: dict[str, Any] = {
             "method": method,
             "path": self.path,
             "url": url,
         }
         if body_dict:
-            arguments["body"] = _truncate_body(body_dict)
+            arguments["body"] = redact_sensitive(_truncate_body(body_dict))
 
         start = time.time()
         error_msg = None
@@ -165,7 +170,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
         except Exception as e:
             error_msg = f"{type(e).__name__}: {e}"
-            self.send_error(502, f"Proxy error: {e}")
+            self.send_error(502, "Proxy error: upstream unavailable")
         finally:
             duration_ms = (time.time() - start) * 1000
             if proxy:
@@ -193,11 +198,11 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self._proxy_request("PATCH")
 
     def do_OPTIONS(self) -> None:
-        """Handle CORS preflight."""
+        """Handle CORS preflight — restricted to localhost only."""
         self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Origin", "http://127.0.0.1")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
 
     def log_message(self, format: str, *args: Any) -> None:

@@ -28,7 +28,7 @@ import time
 from typing import Any, Optional
 
 from toolproof.proxy import ToolProxy
-from toolproof.receipt import ReceiptStore
+from toolproof.receipt import ReceiptStore, redact_sensitive
 
 
 _patched_openai = False
@@ -150,7 +150,7 @@ def _record_openai_tool_calls(result: Any, proxy: ToolProxy, parent_duration: fl
 
                 proxy.record(
                     tool_name=f"tool:{func_name}",
-                    arguments=args,
+                    arguments=redact_sensitive(args),
                     response=None,  # Response comes from tool execution, not LLM
                     duration_ms=0,
                 )
@@ -247,7 +247,7 @@ def _record_anthropic_tool_uses(result: Any, proxy: ToolProxy) -> None:
             if hasattr(block, "type") and block.type == "tool_use":
                 proxy.record(
                     tool_name=f"tool:{block.name}",
-                    arguments=block.input if isinstance(block.input, dict) else {},
+                    arguments=redact_sensitive(block.input if isinstance(block.input, dict) else {}),
                     response=None,
                     duration_ms=0,
                 )

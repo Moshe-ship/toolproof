@@ -39,7 +39,7 @@ def _save_config(config: dict) -> None:
 
 
 def _get_store(path: str | None) -> ReceiptStore:
-    store_path = Path(path) if path else DEFAULT_STORE_PATH
+    store_path = Path(path).resolve() if path else DEFAULT_STORE_PATH
     return ReceiptStore(store_path)
 
 
@@ -349,9 +349,16 @@ def import_claude(session: str | None, limit: int, path: str | None, secret: str
     secret = _get_secret(secret)
 
     if session:
-        # Find specific session
+        # SECURITY: sanitize session ID to prevent glob injection
+        import re as _re
+        if not _re.match(r"^[a-zA-Z0-9_-]+$", session):
+            console.print("[red]Invalid session ID (alphanumeric, hyphens, underscores only).[/red]")
+            sys.exit(1)
         claude_dir = Path.home() / ".claude" / "projects"
-        matches = list(claude_dir.rglob(f"{session}*.jsonl"))
+        matches = [
+            p for p in claude_dir.rglob("*.jsonl")
+            if p.stem.startswith(session)
+        ]
         if not matches:
             console.print(f"[red]Session not found: {session}[/red]")
             sys.exit(1)

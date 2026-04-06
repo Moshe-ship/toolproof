@@ -13,7 +13,7 @@ class ToolProxy:
 
     Usage:
         store = ReceiptStore()
-        proxy = ToolProxy(store, secret="my-key")
+        proxy = ToolProxy(store, secret=os.environ.get("TOOLPROOF_SECRET"))
 
         # Wrap a function
         safe_search = proxy.wrap(search_database)

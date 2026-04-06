@@ -163,9 +163,11 @@ def find_claude_sessions(
     sessions = []
 
     if project_dir:
-        # Search specific project
-        safe_name = project_dir.replace("/", "-").replace("\\", "-")
-        project_path = claude_dir / safe_name
+        # SECURITY: sanitize and validate path stays within claude_dir
+        safe_name = project_dir.replace("/", "-").replace("\\", "-").replace("..", "")
+        project_path = (claude_dir / safe_name).resolve()
+        if not str(project_path).startswith(str(claude_dir.resolve())):
+            return []  # Path traversal attempt
         if project_path.exists():
             sessions.extend(project_path.glob("*.jsonl"))
     else:

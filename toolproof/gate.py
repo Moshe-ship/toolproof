@@ -76,18 +76,27 @@ class Rule:
         """Check if this rule matches a tool call."""
         # Check tool name
         if self.tool != "*":
-            if not re.match(self.tool.replace("*", ".*"), tool_name, re.IGNORECASE):
+            try:
+                if not re.match(self.tool.replace("*", ".*"), tool_name, re.IGNORECASE):
+                    return False
+            except re.error:
                 return False
 
-        # Check argument patterns
+        # Check argument patterns (with timeout protection via match limit)
         if self.pattern:
-            args_str = json.dumps(arguments, ensure_ascii=False)
-            if not re.search(self.pattern, args_str, re.IGNORECASE):
+            args_str = json.dumps(arguments, ensure_ascii=False)[:5000]
+            try:
+                if not re.search(self.pattern, args_str, re.IGNORECASE):
+                    return False
+            except re.error:
                 return False
 
         if self.arg_key and self.arg_pattern:
-            val = str(arguments.get(self.arg_key, ""))
-            if not re.search(self.arg_pattern, val, re.IGNORECASE):
+            val = str(arguments.get(self.arg_key, ""))[:2000]
+            try:
+                if not re.search(self.arg_pattern, val, re.IGNORECASE):
+                    return False
+            except re.error:
                 return False
 
         return True
