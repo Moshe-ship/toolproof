@@ -1,0 +1,36 @@
+{
+  "$schema": "https://clawhub.com/schema/v1/skill-collection.json",
+  "name": "toolproof",
+  "displayName": "ToolProof — Agent Tool Verification",
+  "description": "Catches hallucinated tool calls with signed execution receipts. Every tool call gets a cryptographic receipt. Trust scores, cost tracking, pre-execution gating.",
+  "version": "0.3.0",
+  "author": {
+    "name": "Musa Abu Mazin",
+    "github": "Moshe-ship"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/Moshe-ship/toolproof",
+  "homepage": "https://github.com/Moshe-ship/toolproof",
+  "tags": [
+    "verification",
+    "trust",
+    "audit",
+    "security",
+    "hallucination",
+    "tool-calling",
+    "receipts",
+    "cost-tracking",
+    "agent-safety"
+  ],
+  "languages": ["en", "ar"],
+  "skills": [
+    {"path": "skills/toolproof-audit", "category": "verification"},
+    {"path": "skills/toolproof-report", "category": "verification"}
+  ],
+  "extensions": [
+    {"path": "extensions/toolproof-plugin", "category": "security"}
+  ],
+  "hooks": [
+    {"path": "hooks/toolproof-verify", "category": "security"}
+  ]
+}

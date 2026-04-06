@@ -1,0 +1,65 @@
+{
+  "name": "toolproof",
+  "displayName": "ToolProof — Agent Tool Verification",
+  "version": "0.3.0",
+  "description": "Catches hallucinated tool calls with signed execution receipts. Every tool call gets a cryptographic receipt. Cross-references agent claims against actual execution.",
+  "author": {
+    "name": "Musa the Carpenter",
+    "github": "Moshe-ship"
+  },
+  "license": "MIT",
+  "entrypoint": "index.ts",
+  "pluginApi": ">=2026.3.22",
+  "minGatewayVersion": "2026.3.20",
+  "config": {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "secret": {
+          "type": "string",
+          "description": "HMAC signing key for tamper-proof receipts"
+        },
+        "storePath": {
+          "type": "string",
+          "description": "Path to receipt store",
+          "default": "~/.toolproof/receipts.jsonl"
+        },
+        "gateEnabled": {
+          "type": "boolean",
+          "description": "Enable pre-execution gating",
+          "default": false
+        },
+        "costTracking": {
+          "type": "boolean",
+          "description": "Track token costs per tool call",
+          "default": true
+        },
+        "alertThreshold": {
+          "type": "number",
+          "description": "Trust score threshold for alerts (0-1)",
+          "default": 0.7
+        }
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "toolproof-audit",
+      "description": "Verify a tool call claim against execution receipts"
+    },
+    {
+      "name": "toolproof-report",
+      "description": "Generate trust report for the current session"
+    }
+  ],
+  "hooks": ["toolproof-verify"],
+  "tags": [
+    "verification",
+    "trust",
+    "audit",
+    "security",
+    "hallucination",
+    "tool-calling",
+    "receipts"
+  ]
+}

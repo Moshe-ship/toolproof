@@ -17,6 +17,28 @@ def _canonical(obj: Any) -> str:
     return json.dumps(obj, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
 
 
+# Default pricing per million tokens (Claude Sonnet 4.6)
+DEFAULT_PRICING = {
+    "input_per_m": 3.0,
+    "output_per_m": 15.0,
+    "cache_read_per_m": 0.30,
+}
+
+
+def estimate_cost(
+    tokens_in: int,
+    tokens_out: int,
+    cache_read: int = 0,
+    pricing: Optional[dict] = None,
+) -> float:
+    """Estimate USD cost from token counts."""
+    p = pricing or DEFAULT_PRICING
+    cost = (tokens_in / 1_000_000) * p.get("input_per_m", 3.0)
+    cost += (tokens_out / 1_000_000) * p.get("output_per_m", 15.0)
+    cost += (cache_read / 1_000_000) * p.get("cache_read_per_m", 0.30)
+    return cost
+
+
 @dataclass
 class Receipt:
     """A signed proof that a tool was actually called."""
@@ -28,8 +50,17 @@ class Receipt:
     response: Any = None
     error: Optional[str] = None
     duration_ms: float = 0.0
+    # Token cost tracking
+    tokens_in: int = 0
+    tokens_out: int = 0
+    cache_read: int = 0
+    cost_usd: float = 0.0
+    # Cryptographic signatures
     hash: str = ""
     hmac_sig: str = ""
+    # Source tracking
+    source: str = ""  # "openclaw", "claude", "hermes", "proxy", "sdk"
+    session_id: str = ""
 
     def sign(self, secret: Optional[str] = None) -> None:
         """Compute hash and optional HMAC signature."""
