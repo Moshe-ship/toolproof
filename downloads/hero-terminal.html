@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200">
+<title>ToolProof Hero</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 40px; }
+.terminal { background: #111; border: 1px solid #222; border-radius: 12px; width: 900px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.titlebar { background: #1a1a1a; padding: 12px 16px; display: flex; align-items: center; gap: 8px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot.red { background: #ff5f57; }
+.dot.yellow { background: #febc2e; }
+.dot.green { background: #28c840; }
+.titlebar-text { color: #666; font-size: 13px; font-family: monospace; margin-left: 12px; }
+.content { padding: 24px; font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.7; }
+.prompt { color: #22c55e; }
+.cmd { color: #e5e5e5; }
+.dim { color: #555; }
+.output { color: #a3a3a3; }
+.bold { font-weight: 700; }
+.green { color: #22c55e; }
+.yellow { color: #eab308; }
+.red { color: #ef4444; }
+.blue { color: #3b82f6; }
+.score-box { margin: 16px 0; padding: 16px; border: 1px solid #262626; border-radius: 8px; background: #141414; }
+.big-score { font-size: 36px; font-weight: 700; color: #22c55e; letter-spacing: -0.02em; }
+.grade { font-size: 28px; font-weight: 700; color: #22c55e; margin-left: 16px; }
+.divider { border: 0; border-top: 1px solid #1f1f1f; margin: 12px 0; }
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="titlebar">
+    <div class="dot red"></div>
+    <div class="dot yellow"></div>
+    <div class="dot green"></div>
+    <span class="titlebar-text">toolproof &mdash; agent tool verification</span>
+  </div>
+  <div class="content">
+    <div><span class="prompt">$</span> <span class="cmd">toolproof wrap -- python agent.py</span></div>
+    <div class="dim">Proxy: http://127.0.0.1:54321 -> https://api.openai.com</div>
+    <div class="dim">Running: python agent.py</div>
+    <br>
+    <div class="output">Agent completed. 23 tool calls recorded.</div>
+    <br>
+    <div><span class="prompt">$</span> <span class="cmd">toolproof verify agent_output.json</span></div>
+    <br>
+    <div class="score-box">
+      <div>
+        <span class="big-score">94.2%</span>
+        <span class="grade">A</span>
+        <span class="dim" style="margin-left:16px">Risk: LOW</span>
+      </div>
+      <hr class="divider">
+      <div style="display:flex;gap:32px;margin-top:8px">
+        <span><span class="green bold">19</span> <span class="dim">verified</span></span>
+        <span><span class="yellow bold">1</span> <span class="dim">unverified</span></span>
+        <span><span class="red bold">0</span> <span class="dim">tampered</span></span>
+        <span><span class="dim">20 total</span></span>
+      </div>
+    </div>
+    <br>
+    <div class="output">Verification Results</div>
+    <div class="dim">-------------------------------------------</div>
+    <div><span class="cmd">search_flights</span>      <span class="green bold">VERIFIED</span>    <span class="dim">exact match</span></div>
+    <div><span class="cmd">book_hotel</span>           <span class="green bold">VERIFIED</span>    <span class="dim">exact match</span></div>
+    <div><span class="cmd">get_weather</span>          <span class="green bold">VERIFIED</span>    <span class="dim">exact match</span></div>
+    <div><span class="cmd">send_message</span>         <span class="green bold">VERIFIED</span>    <span class="dim">exact match</span></div>
+    <div><span class="cmd">calculate_zakat</span>      <span class="yellow bold">UNVERIFIED</span>  <span class="dim">no receipt found</span></div>
+    <div><span class="cmd">get_prayer_times</span>     <span class="green bold">VERIFIED</span>    <span class="dim">exact match</span></div>
+    <div class="dim">  ... 14 more verified</div>
+    <br>
+    <div class="dim">Cost: $0.0847 | Tokens: 45,230 in / 12,100 out</div>
+  </div>
+</div>
+</body>
+</html>

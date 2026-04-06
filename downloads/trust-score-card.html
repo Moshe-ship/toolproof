@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800">
+<title>Trust Score</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0a0a0a; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 40px; font-family: -apple-system, system-ui, sans-serif; }
+.card { background: #111; border: 1px solid #222; border-radius: 16px; padding: 40px; width: 700px; }
+.header { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; }
+.score { font-size: 64px; font-weight: 800; color: #22c55e; letter-spacing: -0.03em; }
+.grade { font-size: 48px; font-weight: 800; color: #22c55e; }
+.risk { color: #22c55e; font-size: 14px; font-weight: 500; padding: 4px 12px; border: 1px solid #22c55e40; border-radius: 4px; margin-left: auto; }
+.counts { display: flex; gap: 40px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #1f1f1f; }
+.count-item { display: flex; flex-direction: column; }
+.count-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.1em; }
+.count-value { font-size: 28px; font-weight: 700; }
+.count-green { color: #22c55e; }
+.count-yellow { color: #eab308; }
+.count-red { color: #ef4444; }
+.count-dim { color: #555; }
+.grades { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.grade-item { text-align: center; padding: 12px 8px; border-radius: 6px; background: #141414; border: 1px solid #1f1f1f; }
+.grade-letter { font-size: 20px; font-weight: 700; }
+.grade-range { font-size: 11px; color: #555; margin-top: 2px; }
+.grade-a { border-color: #22c55e40; }
+.grade-a .grade-letter { color: #22c55e; }
+.grade-b .grade-letter { color: #3b82f6; }
+.grade-c .grade-letter { color: #eab308; }
+.grade-d .grade-letter { color: #ef4444; }
+.grade-f .grade-letter { color: #ef4444; }
+.cost-row { margin-top: 24px; display: flex; gap: 32px; }
+.cost-item { color: #555; font-size: 13px; }
+.cost-item span { color: #a3a3a3; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="score">94.2%</div>
+    <div class="grade">A</div>
+    <div class="risk">LOW RISK</div>
+  </div>
+  <div class="counts">
+    <div class="count-item">
+      <div class="count-label">Verified</div>
+      <div class="count-value count-green">19</div>
+    </div>
+    <div class="count-item">
+      <div class="count-label">Unverified</div>
+      <div class="count-value count-yellow">1</div>
+    </div>
+    <div class="count-item">
+      <div class="count-label">Tampered</div>
+      <div class="count-value count-red">0</div>
+    </div>
+    <div class="count-item">
+      <div class="count-label">Total</div>
+      <div class="count-value count-dim">20</div>
+    </div>
+  </div>
+  <div class="grades">
+    <div class="grade-item grade-a">
+      <div class="grade-letter">A</div>
+      <div class="grade-range">95%+</div>
+    </div>
+    <div class="grade-item grade-b">
+      <div class="grade-letter">B</div>
+      <div class="grade-range">85-94%</div>
+    </div>
+    <div class="grade-item grade-c">
+      <div class="grade-letter">C</div>
+      <div class="grade-range">70-84%</div>
+    </div>
+    <div class="grade-item grade-d">
+      <div class="grade-letter">D</div>
+      <div class="grade-range">50-69%</div>
+    </div>
+    <div class="grade-item grade-f">
+      <div class="grade-letter">F</div>
+      <div class="grade-range">&lt;50%</div>
+    </div>
+  </div>
+  <div class="cost-row">
+    <div class="cost-item">Cost: <span>$0.0847</span></div>
+    <div class="cost-item">Tokens in: <span>45,230</span></div>
+    <div class="cost-item">Tokens out: <span>12,100</span></div>
+    <div class="cost-item">Duration: <span>4.2s</span></div>
+  </div>
+</div>
+</body>
+</html>
