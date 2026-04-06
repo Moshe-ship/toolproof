@@ -66,5 +66,15 @@
 
 github.com/Moshe-ship/toolproof
 
+مبنية على:
+
++ @anthropic و Claude Code — هنا اكتشفت المشكلة
++ @OpenAI — لصيغة tool_use المعيارية
++ @steipete و @OpenClaw — ToolProof إضافة OpenClaw أصلية لأن Peter بنى المنصة قابلة للتوسيع
++ @LangChainAI — أنماط تحديد الأدوات أثرت في تصميم البوابة
++ Microsoft Agent Governance Toolkit — أكد نمط البوابة قبل التنفيذ
++ بحث AEGIS — معمارية الجدار الناري
++ W3C — صيغة الإيصالات تستهدف مواصفة Agentic Integrity
+
 بنيتها موسى النجار.
-شكراً لمجتمع السعودية للذكاء الاصطناعي على المدخلات.
+شكراً لمجتمع السعودية للذكاء الاصطناعي على الاختبار والملاحظات.

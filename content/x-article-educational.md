@@ -188,6 +188,30 @@ I'd rather build the safety layer now than explain the outage later.
 
 ---
 
+## Built On the Shoulders Of
+
+ToolProof wouldn't exist without the tools and people who built the ecosystem it plugs into.
+
+@anthropic and the Claude team — for building Claude Code, the tool that made me realize agents need verification in the first place. Every Claude Code session I ran that hallucinated a file read was another data point that this problem is real.
+
+@OpenAI — for standardizing the tool_use format that every agent framework now follows. ToolProof's verification model is built around this format.
+
+@steipete (Peter Steinberger) and the @OpenClaw team — for building OpenClaw and making it extensible enough that a verification layer can plug in natively. The plugin SDK, the hook system, the ClawHub marketplace — ToolProof is an OpenClaw plugin because OpenClaw was designed to allow exactly this kind of thing.
+
+@LangChainAI — for proving that agent frameworks need tool verification. Their documentation on tool scoping and permission restriction directly informed how ToolProof's gating system works.
+
+Microsoft — for releasing the Agent Governance Toolkit on April 2, 2026, and validating that pre-execution gating is the right architectural pattern.
+
+The AEGIS research team — for the pre-execution firewall paper (arxiv 2603.12621) that shaped how ToolProof's policy engine works.
+
+The W3C Agentic Integrity Verification community group — for proposing the standard that ToolProof's receipt format is designed to be compatible with.
+
+And the Saudi AI Community — for the feedback, the testing, and for pushing Arabic AI forward when nobody else was paying attention.
+
+---
+
 github.com/Moshe-ship/toolproof
 
-Built by Musa the Carpenter. With input from the Saudi AI Community.
+pip install toolproof
+
+Built by Musa the Carpenter.

@@ -69,8 +69,18 @@ This aligns with:
 
 github.com/Moshe-ship/toolproof
 
+Built on top of:
+
++ @anthropic Claude Code — where I first saw the problem
++ @OpenAI — for the tool_use format standard
++ @steipete and @OpenClaw — ToolProof is a native OpenClaw plugin because Peter built the platform to be extensible
++ @LangChainAI — tool scoping patterns informed the gating design
++ Microsoft Agent Governance Toolkit — validated pre-execution gating
++ AEGIS research — the firewall architecture
++ W3C — the receipt format targets the Agentic Integrity spec
+
 Built by Musa the Carpenter.
-Thanks to the Saudi AI Community for the input.
+Thanks to the Saudi AI Community for testing and feedback.
 
 ---
 
