@@ -92,16 +92,17 @@ https://moshe-ship.github.io/toolproof/
 
 Built on top of:
 
-+ @AnthropicAI / @claudecode — where I first saw the problem
-+ @OpenAI — for the tool_use format standard
-+ @steipete and @OpenClaw — ToolProof is a native OpenClaw plugin because Peter built the platform to be extensible
-+ @karpathy — the eval-driven philosophy. Measure everything. The analytics loop exists because of his work.
++ @AnthropicAI — Claude Code is where I first saw agents lying about tool calls
++ @OpenAI — the tool_use format standard everything is built around
++ @steipete and @OpenClaw — native plugin platform, Peter built it to be extensible
++ @karpathy — eval-driven philosophy, measure everything, the analytics loop exists because of his work
++ @kevinrgu / AutoAgent — meta-agent concept that inspired the self-improving feedback loop
 + @LangChainAI — tool scoping patterns informed the gating design
 + @Microsoft Agent Governance Toolkit — validated pre-execution gating
 + AEGIS research — the firewall architecture
-+ W3C — the receipt format targets the Agentic Integrity spec
++ @w3c — the receipt format targets the Agentic Integrity spec
 
-Built by Musa the Carpenter.
+Built by @Mosescreates (Musa the Carpenter).
 Thanks to the Saudi AI Community for testing and feedback.
 
 ---

@@ -212,13 +212,15 @@ This is what @karpathy has been saying about LLMs for years: systematic evaluati
 
 ToolProof wouldn't exist without the tools and people who built the ecosystem it plugs into.
 
-@AnthropicAI and the @claudecode team — for building Claude Code, the tool that made me realize agents need verification in the first place. Every Claude Code session I ran that hallucinated a file read was another data point that this problem is real.
+@AnthropicAI — for building Claude Code, the tool that made me realize agents need verification in the first place. Every Claude Code session I ran that hallucinated a file read was another data point that this problem is real.
 
 @OpenAI — for standardizing the tool_use format that every agent framework now follows. ToolProof's verification model is built around this format.
 
-@steipete (Peter Steinberger) and the @OpenClaw team — for building OpenClaw and making it extensible enough that a verification layer can plug in natively. The plugin SDK, the hook system, the ClawHub marketplace — ToolProof is an OpenClaw plugin because OpenClaw was designed to allow exactly this kind of thing.
+@steipete (Peter Steinberger) and @OpenClaw — for building OpenClaw and making it extensible enough that a verification layer can plug in natively. The plugin SDK, the hook system, ClawHub — ToolProof is a native OpenClaw plugin because the platform was designed to allow exactly this kind of thing.
 
 @karpathy (Andrej Karpathy) — for the eval-driven development philosophy. The analytics and feedback loop in ToolProof is directly inspired by his work on systematic LLM evaluation. You don't improve what you don't measure.
+
+AutoAgent by @kevinrgu (Third Layer Inc) — for the meta-agent concept. The idea that an agent can analyze its own performance and improve iteratively is what ToolProof's feedback loop operationalizes.
 
 @LangChainAI — for proving that agent frameworks need tool verification. Their documentation on tool scoping and permission restriction directly informed how ToolProof's gating system works.
 
@@ -226,9 +228,9 @@ ToolProof wouldn't exist without the tools and people who built the ecosystem it
 
 The AEGIS research team — for the pre-execution firewall paper (arxiv 2603.12621) that shaped how ToolProof's policy engine works.
 
-The W3C Agentic Integrity Verification community group — for proposing the standard that ToolProof's receipt format is designed to be compatible with.
+@w3c Agentic Integrity Verification community group — for proposing the standard that ToolProof's receipt format is designed to be compatible with.
 
-And the Saudi AI Community (@saborets_ai) — for the feedback, the testing, and for pushing Arabic AI forward when nobody else was paying attention.
+And the Saudi AI Community (x.com/i/communities/2032184341682643429) — for the feedback, the testing, and for pushing Arabic AI forward when nobody else was paying attention.
 
 ---
 

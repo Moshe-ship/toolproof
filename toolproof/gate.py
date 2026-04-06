@@ -24,9 +24,9 @@ Usage:
 
 from __future__ import annotations
 
+import concurrent.futures
 import json
 import re
-import signal
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -34,44 +34,27 @@ from typing import Any, Optional
 
 
 def _safe_regex(pattern: str, text: str, timeout_ms: int = 100) -> bool:
-    """Run regex match with a timeout to prevent ReDoS.
+    """Run regex match with a hard timeout to prevent ReDoS.
 
-    Returns True if pattern matches text. Returns False on timeout or error.
+    Uses ThreadPoolExecutor — works in main thread AND worker threads.
+    Returns True if pattern matches. Returns False on timeout or error.
     """
     try:
         compiled = re.compile(pattern, re.IGNORECASE)
     except re.error:
         return False
 
-    # Use signal alarm on Unix for hard timeout
-    class RegexTimeout(Exception):
-        pass
+    def _do_match() -> bool:
+        return compiled.search(text) is not None
 
-    def _handler(signum: int, frame: Any) -> None:
-        raise RegexTimeout()
-
-    old_handler = None
     try:
-        old_handler = signal.signal(signal.SIGALRM, _handler)
-        signal.setitimer(signal.ITIMER_REAL, timeout_ms / 1000.0)
-        result = compiled.search(text) is not None
-        signal.setitimer(signal.ITIMER_REAL, 0)
-        return result
-    except RegexTimeout:
-        return False  # Treat timeout as no match (safe default)
-    except (ValueError, OSError):
-        # signal not available (e.g., not main thread) — fallback to truncated match
-        try:
-            return compiled.search(text[:500]) is not None
-        except re.error:
-            return False
-    finally:
-        signal.setitimer(signal.ITIMER_REAL, 0)
-        if old_handler is not None:
-            try:
-                signal.signal(signal.SIGALRM, old_handler)
-            except (ValueError, OSError):
-                pass
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(_do_match)
+            return future.result(timeout=timeout_ms / 1000.0)
+    except concurrent.futures.TimeoutError:
+        return False
+    except Exception:
+        return False
 
 
 class Action(str, Enum):
