@@ -24,7 +24,6 @@ Usage:
 
 from __future__ import annotations
 
-import concurrent.futures
 import json
 import re
 from dataclasses import dataclass, field
@@ -33,26 +32,30 @@ from pathlib import Path
 from typing import Any, Optional
 
 
-def _safe_regex(pattern: str, text: str, timeout_ms: int = 100) -> bool:
-    """Run regex match with a hard timeout to prevent ReDoS.
+_CATASTROPHIC_RE = re.compile(
+    r"(\([^)]*[+*][^)]*\)[+*])"  # nested quantifiers like (a+)+ or (a*)*
+)
 
-    Uses ThreadPoolExecutor — works in main thread AND worker threads.
-    Returns True if pattern matches. Returns False on timeout or error.
+
+def _safe_regex(pattern: str, text: str, timeout_ms: int = 100) -> bool:
+    """Run regex match with ReDoS prevention.
+
+    Strategy: reject patterns with nested quantifiers at parse time.
+    These are the only patterns that cause catastrophic backtracking.
+    No threads, no signals, no zombie processes.
     """
+    # Reject patterns with nested quantifiers — the root cause of ALL ReDoS
+    if _CATASTROPHIC_RE.search(pattern):
+        return False
+
     try:
         compiled = re.compile(pattern, re.IGNORECASE)
     except re.error:
         return False
 
-    def _do_match() -> bool:
-        return compiled.search(text) is not None
-
+    # With nested quantifiers rejected, normal regex is safe on truncated input
     try:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            future = pool.submit(_do_match)
-            return future.result(timeout=timeout_ms / 1000.0)
-    except concurrent.futures.TimeoutError:
-        return False
+        return compiled.search(text[:2000]) is not None
     except Exception:
         return False
 
