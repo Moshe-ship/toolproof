@@ -25,25 +25,36 @@
 
 - toolproof wrap -- python agent.py (يلتقط كل شي تلقائي)
 - toolproof proxy --target localhost:3000 (وضع البروكسي)
-- toolproof.patch_openai() (سطر واحد SDK)
-- toolproof import-claude (يقرأ جلسات Claude Code)
+- toolproof.patch_openai() (سطر واحد SDK لـ @OpenAI)
+- toolproof import-claude (يقرأ جلسات @claudecode)
 - toolproof ci --min-trust 0.8 (بوابة CI للنشر)
+- toolproof analyze (يلقى أنماط الفشل وتكاليف شاذة)
+- toolproof feedback --format hermes (يولّد إعدادات تحسين للوكيل)
 
 شو يميزه عن كل شي ثاني:
 
 + مو لوحة مراقبة ثانية
 + إثبات تشفيري، مو بس سجلات
 + بوابة قبل التنفيذ (يمنع الاستدعاءات الخطيرة قبل ما تشتغل)
-+ تتبع تكلفة التوكنات لكل استدعاء (يكشف مشكلة كاش أنثروبيك)
-+ إضافة أصلية لـ OpenClaw (منشور على ClawHub)
-+ يشتغل مع Claude Code و Hermes و OpenClaw و OpenAI و Anthropic
-+ 63 اختبار. رخصة MIT. ثلاث مكتبات. يشتغل محلياً.
++ تتبع تكلفة التوكنات لكل استدعاء (يكشف مشكلة كاش @AnthropicAI)
++ حلقة تحسين مبنية على التقييم (مستوحاة من @karpathy — قيّس كل شي، حسّن بشكل منهجي)
++ إضافة أصلية لـ @OpenClaw (منشور على ClawHub، شكراً @steipete)
++ يشتغل مع @claudecode و Hermes و @OpenClaw و @OpenAI و @AnthropicAI
++ 71 اختبار. 18 موديول. 17 أمر. رخصة MIT. يشتغل محلياً.
 
-مشكلة أنثروبيك اللي يحلها:
+حلقة التقييم (أسلوب @karpathy):
+
++ toolproof analyze — يلقى أي أدوات تتهلوس أكثر، تكاليف شاذة، كفاءة الكاش
++ toolproof feedback — يولّد تغييرات إعدادات قابلة للتنفيذ لوكيلك
++ يطلع بروفايلات Hermes، إعدادات @OpenClaw، أو JSON عام
++ شغّل -> سجّل -> حلّل -> ملاحظات -> حسّن -> كرر
++ ما تقدر تحسّن شي ما تقيسه
+
+مشكلة @AnthropicAI اللي يحلها:
 
 - مارس 2026: حد الأدوات لكل دورة نزل من 60+ لحوالي 10-20
 - الكاش تعطل بصمت، رفع التكاليف 10-20 ضعف
-- جلسات Claude Code (5 ساعات) تخلص في 19 دقيقة
+- جلسات @claudecode (5 ساعات) تخلص في 19 دقيقة
 - ToolProof يبيّن لك بالضبط أي استدعاء يحرق توكناتك
 - حط حدود تكلفة. امنع الاستدعاءات اللي تتجاوز الميزانية. قبل ما تنفذ.
 
@@ -55,24 +66,35 @@
 + حد تكلفة لكل استدعاء ($0.50 كحد أقصى)
 + حد تكلفة للجلسة ($10 كحد أقصى)
 
+الأمان:
+
++ جولتين اختبار اختراق. 14 ثغرة ثُبتت. 6 تجاوزات اكتُشفت وصُلحت.
++ مقارنة هاش آمنة ضد هجمات التوقيت
++ حماية SSRF في البروكسي
++ كشف الروابط الرمزية في كل المسارات
++ حماية ReDoS بمهلات صارمة
++ حجب الأسرار (20+ نمط)
+
 هذا يتماشى مع:
 
-- Microsoft Agent Governance Toolkit (صدر 2 أبريل)
+- @Microsoft Agent Governance Toolkit (صدر 2 أبريل)
 - أبحاث AEGIS للجدار الناري قبل التنفيذ
 - مسودة W3C للتحقق من سلامة الوكلاء
 - قانون الاتحاد الأوروبي للذكاء الاصطناعي (التطبيق أغسطس 2026)
 
-63 اختبار ناجح. pip install toolproof.
+71 اختبار ناجح. pip install toolproof.
 
 github.com/Moshe-ship/toolproof
+https://moshe-ship.github.io/toolproof/
 
 مبنية على:
 
-+ @anthropic و Claude Code — هنا اكتشفت المشكلة
++ @AnthropicAI / @claudecode — هنا اكتشفت المشكلة
 + @OpenAI — لصيغة tool_use المعيارية
 + @steipete و @OpenClaw — ToolProof إضافة OpenClaw أصلية لأن Peter بنى المنصة قابلة للتوسيع
++ @karpathy — فلسفة التقييم. قيّس كل شي. حلقة التحليل موجودة بفضل شغله.
 + @LangChainAI — أنماط تحديد الأدوات أثرت في تصميم البوابة
-+ Microsoft Agent Governance Toolkit — أكد نمط البوابة قبل التنفيذ
++ @Microsoft Agent Governance Toolkit — أكد نمط البوابة قبل التنفيذ
 + بحث AEGIS — معمارية الجدار الناري
 + W3C — صيغة الإيصالات تستهدف مواصفة Agentic Integrity
 

@@ -188,30 +188,54 @@ I'd rather build the safety layer now than explain the outage later.
 
 ---
 
+## The Eval Loop
+
+The newest feature is something I'm calling eval-driven optimization. Inspired by @karpathy's philosophy — you don't improve what you don't measure.
+
+ToolProof now has two commands that close the loop:
+
+    toolproof analyze
+
+This reads your receipt history and finds patterns. Which tools get hallucinated most. Which calls cost the most. Whether prompt caching is actually working. Cache efficiency percentages. Cost anomalies that are 10x the average.
+
+    toolproof feedback --format hermes
+
+This takes the analysis and outputs actionable config changes for your agent framework. For Hermes, it writes a feedback.json your profile can read. For OpenClaw, same format. For anything else, generic JSON.
+
+The loop becomes: run agent -> ToolProof records -> analyze patterns -> generate feedback -> agent adjusts -> next run is better.
+
+This is what @karpathy has been saying about LLMs for years: systematic evaluation beats vibes. ToolProof applies that to tool calling.
+
+---
+
 ## Built On the Shoulders Of
 
 ToolProof wouldn't exist without the tools and people who built the ecosystem it plugs into.
 
-@anthropic and the Claude team — for building Claude Code, the tool that made me realize agents need verification in the first place. Every Claude Code session I ran that hallucinated a file read was another data point that this problem is real.
+@AnthropicAI and the @claudecode team — for building Claude Code, the tool that made me realize agents need verification in the first place. Every Claude Code session I ran that hallucinated a file read was another data point that this problem is real.
 
 @OpenAI — for standardizing the tool_use format that every agent framework now follows. ToolProof's verification model is built around this format.
 
 @steipete (Peter Steinberger) and the @OpenClaw team — for building OpenClaw and making it extensible enough that a verification layer can plug in natively. The plugin SDK, the hook system, the ClawHub marketplace — ToolProof is an OpenClaw plugin because OpenClaw was designed to allow exactly this kind of thing.
 
+@karpathy (Andrej Karpathy) — for the eval-driven development philosophy. The analytics and feedback loop in ToolProof is directly inspired by his work on systematic LLM evaluation. You don't improve what you don't measure.
+
 @LangChainAI — for proving that agent frameworks need tool verification. Their documentation on tool scoping and permission restriction directly informed how ToolProof's gating system works.
 
-Microsoft — for releasing the Agent Governance Toolkit on April 2, 2026, and validating that pre-execution gating is the right architectural pattern.
+@Microsoft — for releasing the Agent Governance Toolkit on April 2, 2026, and validating that pre-execution gating is the right architectural pattern.
 
 The AEGIS research team — for the pre-execution firewall paper (arxiv 2603.12621) that shaped how ToolProof's policy engine works.
 
 The W3C Agentic Integrity Verification community group — for proposing the standard that ToolProof's receipt format is designed to be compatible with.
 
-And the Saudi AI Community — for the feedback, the testing, and for pushing Arabic AI forward when nobody else was paying attention.
+And the Saudi AI Community (@saborets_ai) — for the feedback, the testing, and for pushing Arabic AI forward when nobody else was paying attention.
 
 ---
 
 github.com/Moshe-ship/toolproof
 
 pip install toolproof
+
+71 tests. 18 modules. 17 CLI commands. MIT licensed.
 
 Built by Musa the Carpenter.

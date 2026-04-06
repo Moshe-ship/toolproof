@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ToolProof -- Agent Tool Verification</title>
+<title>ToolProof v0.4.0 -- Agent Tool Verification</title>
 <meta name="description" content="Agents lie about tool calls. ToolProof catches them. CLI tool for verifying agent tool execution with cryptographic receipts.">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -358,7 +358,7 @@ footer {
 <!-- HERO -->
 <div class="container">
   <header class="hero">
-    <div class="hero-badge">v0.1 -- agent tool verification cli</div>
+    <div class="hero-badge">v0.4.0 -- agent tool verification cli</div>
     <h1>Agents lie about tool calls. ToolProof catches them.</h1>
     <p>Cryptographic receipts for every tool invocation. Verify what your agent actually did -- not what it claims it did.</p>
     <div class="install-block">
@@ -465,7 +465,70 @@ footer {
         <h3>Hermes + OpenClaw</h3>
         <p>Native support for Hermes agent framework and OpenClaw skill ecosystem.</p>
       </div>
+      <div class="feature">
+        <h3>Eval Loop</h3>
+        <p>Analyze sessions and generate structured feedback. Karpathy-inspired eval-driven optimization built in.</p>
+      </div>
+      <div class="feature">
+        <h3>Security Hardened</h3>
+        <p>Two full penetration testing rounds. Input validation, parameterized queries, no leaked secrets.</p>
+      </div>
     </div>
+  </section>
+</div>
+
+<!-- EVAL LOOP -->
+<div class="container">
+  <section>
+    <div class="section-label">Eval-Driven Optimization</div>
+    <h2>Run. Record. Analyze. Feedback. Improve.</h2>
+    <p>Inspired by Andrej Karpathy's eval philosophy: you don't improve what you don't measure. ToolProof closes the loop between agent execution and agent improvement. Every session generates structured analytics. Feed results back into your agent as optimization signal.</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+          <h3>Run</h3>
+          <p>Execute your agent with ToolProof intercepting all tool calls. Receipts are generated automatically.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+          <h3>Record</h3>
+          <p>Every call, parameter, response, and cost is stored in SQLite. Full session history, queryable.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+          <h3>Analyze</h3>
+          <p>Run <code>toolproof analyze</code> to compute trust scores, failure patterns, cost distribution, and per-tool reliability metrics.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-content">
+          <h3>Feedback</h3>
+          <p>Run <code>toolproof feedback --format hermes</code> to generate structured improvement signals your agent framework can ingest directly.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-content">
+          <h3>Improve</h3>
+          <p>Your agent receives concrete data on what went wrong and adjusts. The loop repeats. Trust scores trend upward.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-diagram"><span class="d">Agent Run</span> ----&gt; <span class="g">Record Receipts</span> ----&gt; <span class="g">toolproof analyze</span>
+                                           |
+                                  <span class="g">toolproof feedback --format hermes</span>
+                                           |
+                                     <span class="d">Agent Ingests Feedback</span>
+                                           |
+                                     <span class="g">Next Run Improves</span></div>
   </section>
 </div>
 
@@ -473,13 +536,13 @@ footer {
 <div class="container">
   <section>
     <div class="section-label">Quick Start</div>
-    <h2>Four commands. That's it.</h2>
+    <h2>Six commands. That's it.</h2>
 
     <div class="code-block">
       <div class="code-header">Wrap any agent</div>
       <pre><span class="prompt">$</span> <span class="cmd">toolproof wrap</span> <span class="flag">--</span> <span class="cmd">python agent.py</span>
 <span class="output">  [toolproof] intercepting tool calls...</span>
-<span class="output">  [toolproof] 14 calls captured, 14 verified</span>
+<span class="output">  [toolproof] 71 tests | 18 modules | 17 commands</span>
 <span class="output">  [toolproof] trust score: A (1.00)</span></pre>
     </div>
 
@@ -502,6 +565,21 @@ footer {
       <div class="code-header">CI pipeline gate</div>
       <pre><span class="prompt">$</span> <span class="cmd">toolproof ci</span> <span class="flag">--min-trust</span> <span class="cmd">0.8</span>
 <span class="output">  [toolproof] trust score: 0.94 -- PASS</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">Analyze sessions</div>
+      <pre><span class="prompt">$</span> <span class="cmd">toolproof analyze</span>
+<span class="output">  [toolproof] 71 tests | 18 modules | 17 commands</span>
+<span class="output">  [toolproof] trust trend: 0.82 -> 0.94 (+14.6%)</span>
+<span class="output">  [toolproof] top failure: file_read (3 unverified)</span></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">Generate feedback for agent</div>
+      <pre><span class="prompt">$</span> <span class="cmd">toolproof feedback</span> <span class="flag">--format</span> <span class="cmd">hermes</span>
+<span class="output">  [toolproof] feedback generated: 4 improvement signals</span>
+<span class="output">  [toolproof] output: feedback-2026-04-06.json</span></pre>
     </div>
   </section>
 </div>
@@ -551,6 +629,23 @@ footer {
         </tbody>
       </table>
     </div>
+  </section>
+</div>
+
+<!-- BUILT WITH -->
+<div class="container">
+  <section>
+    <div class="section-label">Built With</div>
+    <h2>Standing on the shoulders of giants.</h2>
+    <p style="margin-top: 1.5rem; color: var(--fg-dim); font-family: var(--mono); font-size: 0.85rem; line-height: 2.2;">
+      Anthropic / Claude Code<br>
+      OpenAI<br>
+      Peter Steinberger / OpenClaw<br>
+      Andrej Karpathy (eval philosophy)<br>
+      LangChain<br>
+      Microsoft AGT<br>
+      Saudi AI Community
+    </p>
   </section>
 </div>
 

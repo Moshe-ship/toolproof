@@ -1,19 +1,28 @@
-# toolproof
+# ToolProof v0.4.0
 
-**Agent tool verification**
+**Agent tool verification. Pre-execution gating. Eval-driven optimization.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
+[![Tests: 71 passing](https://img.shields.io/badge/tests-71%20passing-green.svg)]()
+[![OpenClaw Plugin](https://img.shields.io/badge/OpenClaw-native%20plugin-orange.svg)]()
 
-> Agents lie about tool calls. ToolProof catches them.
+> Agents lie about tool calls. ToolProof catches them before and after execution.
 
-## Why
+[Landing Page](https://moshe-ship.github.io/toolproof/)
 
-AI agents claim they searched a database, read a file, or called an API. 91.1% of the time under adversarial conditions, they hallucinate the results. They report data that was never returned. They reference tool calls that never happened.
+---
+
+## The Problem
+
+AI agents claim they searched a database, read a file, or called an API. Under adversarial conditions, 91.1% of the time they hallucinate the results. They report data that was never returned. They reference tool calls that never happened. They execute destructive commands without authorization.
 
 No tool on the market detects this.
 
-ToolProof records every tool execution with a signed receipt, then cross-references what the agent claims against what actually happened.
+ToolProof does two things:
+
+1. **Pre-execution gating** -- AEGIS-style policy enforcement that blocks dangerous tool calls before they run.
+2. **Post-execution verification** -- signed receipts that prove what actually happened, cross-referenced against what the agent claims.
 
 ## Install
 
@@ -82,28 +91,76 @@ result = verifier.verify_claim(claim)
 print(result.verdict)  # VERIFIED, UNVERIFIED, or TAMPERED
 ```
 
+### Pre-execution gating
+
+```python
+from toolproof.gate import Gate, Policy
+
+policy = Policy.load()  # from ~/.toolproof/policy.json
+gate = Gate(policy)
+
+decision = gate.check("Bash", {"command": "rm -rf /"})
+# Decision(action="block", reason="Destructive shell command")
+
+decision = gate.check("Read", {"file_path": "/src/main.py"})
+# Decision(action="allow")
+```
+
+Block, allow, or hold tool calls for human review. Policy-driven. No code changes in your agent.
+
+---
+
 ## Commands
+
+17 CLI commands.
 
 | Command | What it does |
 |---|---|
-| `toolproof status` | Show receipt store status |
-| `toolproof verify <file>` | Verify agent claims against receipts |
-| `toolproof report` | Show all recorded receipts |
-| `toolproof report --html` | Generate HTML trust report |
-| `toolproof inspect <id>` | Inspect a specific receipt |
-| `toolproof proxy --target <url>` | Start HTTP proxy that records tool calls |
-| `toolproof wrap -- <command>` | Run command with automatic recording |
+| `toolproof analyze` | Run trust analytics on receipt history |
+| `toolproof ci` | One-shot CI trust check |
+| `toolproof clear` | Clear all receipts |
+| `toolproof config` | Configure settings |
+| `toolproof feedback` | Generate actionable feedback for agent frameworks |
+| `toolproof github-action` | Print GitHub Action template |
+| `toolproof import-all` | Import from all sources |
 | `toolproof import-claude` | Import from Claude Code sessions |
 | `toolproof import-hermes` | Import from Hermes agent logs |
 | `toolproof import-openclaw` | Import from OpenClaw skill logs |
-| `toolproof import-all` | Import from all sources |
+| `toolproof inspect <id>` | Inspect a specific receipt |
+| `toolproof proxy --target <url>` | Start HTTP proxy that records tool calls |
+| `toolproof report` | Show all recorded receipts |
+| `toolproof status` | Show receipt store status |
+| `toolproof verify <file>` | Verify agent claims against receipts |
 | `toolproof watch` | Live monitoring dashboard |
-| `toolproof ci` | One-shot CI trust check |
-| `toolproof config` | Configure settings |
-| `toolproof clear` | Clear all receipts |
-| `toolproof github-action` | Print GitHub Action template |
+| `toolproof wrap -- <command>` | Run command with automatic recording |
 
-## How It Works
+---
+
+## Architecture
+
+### 18 Python Modules
+
+```
+toolproof/
+  __init__.py          # Package entry, SDK patch exports
+  __main__.py          # python -m toolproof
+  analytics.py         # Trust analytics, pattern detection, cost hotspots
+  claude_reader.py     # Claude Code session log parser
+  cli.py               # Click CLI, 17 commands
+  display.py           # Rich terminal output
+  feedback.py          # Actionable feedback generator for agent frameworks
+  gate.py              # Pre-execution gating (AEGIS-style policy enforcement)
+  html_report.py       # Standalone dark-theme HTML trust reports
+  http_proxy.py        # HTTP proxy, protocol auto-detection
+  interceptors.py      # Tool call interception layer
+  proxy.py             # Function-level tool wrapping
+  receipt.py           # Signed execution receipts, JSONL store
+  safepath.py          # Path validation, traversal prevention
+  sdk_patch.py         # OpenAI/Anthropic SDK monkey-patching
+  trust.py             # Trust scoring, grading, risk assessment
+  verifier.py          # Claim verification engine
+  watch.py             # Live monitoring dashboard
+```
 
 ### Recording
 
@@ -123,6 +180,22 @@ ToolProof intercepts tool calls through one of these methods:
 3. **Function wrapper** -- wraps individual functions
 4. **Log import** -- reads existing logs from Claude Code, Hermes, OpenClaw
 
+### Pre-Execution Gating
+
+```
+Agent wants to call tool X with args Y
+             |
+             v
+        Gate checks against policy
+             |
+        allow / block / hold
+             |
+             v
+        Tool executes (or doesn't)
+```
+
+AEGIS-style policy enforcement. Define rules in `~/.toolproof/policy.json`. Block destructive commands, restrict file access, require human approval for sensitive operations. Aligned with Microsoft Agent Governance Toolkit patterns and W3C Agentic Integrity Verification draft.
+
 ### Verification
 
 ```
@@ -134,6 +207,18 @@ Agent claims "I called X with Y and got Z"
              v
         Trust Score: VERIFIED / UNVERIFIED / TAMPERED
 ```
+
+### Eval-Driven Optimization Loop
+
+```
+Run agent --> Record receipts --> Analyze patterns --> Generate feedback --> Improve agent
+    ^                                                                          |
+    |__________________________________________________________________________|
+```
+
+The analytics module finds which tools get hallucinated most, which models produce the lowest trust scores, and where token costs concentrate. The feedback module turns those findings into actionable config changes for Hermes profiles, OpenClaw config, and system prompts.
+
+This is eval-driven development applied to tool calling. Measure. Find patterns. Improve systematically. Close the loop.
 
 ### Verdicts
 
@@ -157,9 +242,15 @@ trust_score = verified / (verified + unverified + tampered)
 | D | 50-69% | MEDIUM |
 | F | <50% | HIGH |
 
+### Token Cost Tracking
+
+Every receipt records execution duration. Analytics aggregates cost by tool, model, session, and time window. Find expensive calls. Find broken caching. Find the 20% of tool calls eating 80% of your budget.
+
+---
+
 ## HTTP Proxy
 
-The proxy sits between your agent and its tools. It forwards every request, records a signed receipt, and the agent never knows it's being watched.
+The proxy sits between your agent and its tools. It forwards every request, records a signed receipt, and the agent never knows it is being watched.
 
 ```bash
 # Proxy to a local tool server
@@ -236,6 +327,28 @@ toolproof import-openclaw
 toolproof import-all
 ```
 
+## Analytics and Feedback
+
+```bash
+# Run analytics on your receipt history
+toolproof analyze
+
+# Generate actionable feedback for your agent framework
+toolproof feedback
+```
+
+Analytics finds:
+- Which tools get hallucinated most
+- Which models produce the lowest trust
+- Cost hotspots (broken caching, expensive repeated calls)
+- Failure patterns by time of day, session, source
+
+Feedback generates specific config changes for:
+- Hermes profiles (skill weights, model selection)
+- OpenClaw config (tool permissions, routing)
+- System prompts (add verification instructions)
+- Generic JSON for any framework
+
 ## HTML Reports
 
 ```bash
@@ -291,6 +404,20 @@ toolproof github-action
   run: toolproof ci --min-trust 0.8 --min-receipts 5
 ```
 
+## OpenClaw Native Plugin
+
+ToolProof ships as a native OpenClaw plugin. ClawHub publishable.
+
+```
+openclaw/
+  clawhub.json       # ClawHub package manifest
+  extensions/        # OpenClaw extension points
+  hooks/             # Pre/post execution hooks
+  skills/            # ToolProof skills for OpenClaw agents
+```
+
+Install into OpenClaw and every skill execution gets a signed receipt. Pre-execution gating applies to OpenClaw commands. Feedback writes directly to OpenClaw config.
+
 ## Execution Receipt Format
 
 ```json
@@ -311,11 +438,32 @@ Receipts are signed with SHA-256. Optional HMAC-SHA256 with a secret key for tam
 
 ## Security
 
+Security hardened through 2 rounds of adversarial pen-testing. All bypasses found and fixed.
+
 - Receipts are cryptographically signed (SHA-256 + optional HMAC)
+- Pre-execution gating blocks dangerous tool calls before they run
+- Path traversal prevention on all file operations
 - Config stored at `~/.toolproof/config.json` with `0600` permissions
 - Secret keys are never printed in full
 - Proxy does not modify request or response content
 - All receipt data is stored locally
+- No external telemetry, no phone-home
+
+---
+
+## Built With
+
+This project stands on the shoulders of specific people and projects:
+
+- **[@anthropic](https://anthropic.com) / Claude Code** -- where the problem was first discovered. Watching Claude claim it ran tools that never executed is what started this.
+- **[@OpenAI](https://openai.com)** -- the `tool_use` format standard that every agent framework now follows. ToolProof parses it natively.
+- **[@steipete](https://github.com/steipete) (Peter Steinberger) / [@OpenClaw](https://github.com/nicholasgasior/openclaw)** -- native plugin platform. ToolProof ships as a first-class OpenClaw plugin with ClawHub publishing.
+- **[@karpathy](https://github.com/karpathy) (Andrej Karpathy)** -- eval-driven development philosophy. The analytics and feedback loop in ToolProof is directly inspired by his approach: measure everything, find patterns, improve systematically. No vibes.
+- **[@LangChainAI](https://github.com/langchain-ai)** -- tool scoping patterns that informed how ToolProof intercepts and classifies tool calls.
+- **[Microsoft Agent Governance Toolkit](https://github.com/microsoft/agent-governance-toolkit)** -- patterns for policy-driven agent control that shaped the gating module.
+- **[AEGIS Research](https://arxiv.org/abs/2603.12621)** -- pre-execution firewall concept. ToolProof's gating is an implementation of this idea.
+- **[W3C Agentic Integrity Verification](https://www.w3.org/groups/)** -- draft specification for agent transparency and verifiability that ToolProof aligns with.
+- **[Saudi AI Community](https://x.com/i/communities/2032184341682643429)** -- testing, feedback, and the push to ship it.
 
 ## Community
 
