@@ -93,6 +93,17 @@ class Receipt:
     # Source tracking
     source: str = ""  # "openclaw", "claude", "hermes", "proxy", "sdk"
     session_id: str = ""
+    # MTG (Morphological Type Guards) integration — additive, optional.
+    # Populated by toolproof.mtg_bridge when consuming MTG pipeline output.
+    # NOT included in sign()'s canonical hash so existing 0.4.x receipts
+    # remain hash-compatible.
+    outcome: Optional[str] = None           # 'pass' | 'partial' | 'fail'
+    hash_prev: Optional[str] = None         # previous receipt hash in MTG chain
+    dialect_expected: Optional[str] = None  # from GuardSpec
+    dialect_observed: Optional[str] = None  # from MTG Analysis
+    arabic_preserved: Optional[bool] = None
+    arg_integrity_score: Optional[float] = None
+    mtg_violations: list = field(default_factory=list)
 
     def sign(self, secret: Optional[str] = None) -> None:
         """Compute hash and optional HMAC signature."""
