@@ -1,6 +1,6 @@
 [project]
 name = "toolproof"
-version = "0.5.0"
+version = "0.5.1"
 description = "Agent tool verification - catch hallucinated tool calls with signed execution receipts, now with MTG (Morphological Type Guards) integration"
 requires-python = ">=3.9"
 license = "MIT"

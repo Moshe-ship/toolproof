@@ -2,6 +2,23 @@
 
 All notable changes to ToolProof.
 
+## 0.5.1 — cross-repo integration + review hardening
+
+### Added
+
+- `tests/test_cross_repo_integration.py` — pytest version of the mtg/scripts/cross_repo_smoke.sh flow. Exercises `guard_tool` → `receipt_from_mtg_run` on each Hurmoz dialect-specialized send_message variant, asserts receipt dialect_expected, outcome, and tamper detection. Skips gracefully when mtg/hurmoz not locatable.
+- `integration` pytest marker registered in `pyproject.toml`.
+
+### Changed
+
+- `Receipt.sign()` now produces **two** hashes: the legacy-core hash (0.4.x-compatible, covers tool/args/response/error/ts) and `evidence_hash` (covers MTG fields: outcome, hash_prev, dialect_expected/observed, arabic_preserved, arg_integrity_score, mtg_violations). Tampering either region after signing breaks `verify_integrity()`. Previously MTG fields were silently mutable post-sign — this closes the integrity gap.
+- `mtg_bridge.receipt_from_mtg_run` now reads each guard's attached `spec` dict (ValidationReport propagates it), so `dialect_expected` is pulled from the correct Arabic slot and `dialect_observed` is filtered to Arabic-declared slots instead of falling back to any non-unknown dialect.
+- `pyproject.toml` adds explicit `[tool.setuptools.packages.find]` include/exclude to avoid picking up sibling content/, downloads/, openclaw/ directories.
+
+### Fixed
+
+- Evidence hash regression — MTG integrity fields were not previously covered by the signature. Shipping v0.5.1 to mark the hardening.
+
 ## 0.5.0 — MTG integration
 
 ### Added
