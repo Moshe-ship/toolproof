@@ -106,6 +106,11 @@ class Receipt:
     arabic_preserved: Optional[bool] = None
     arg_integrity_score: Optional[float] = None
     mtg_violations: list = field(default_factory=list)
+    # MTG reconciled-mode repair suggestions (v0.5.2+). Each entry is a
+    # dict matching mtg.repair.RepairSuggestion.to_dict() with an added
+    # `param` key naming which argument the repair applies to. Covered by
+    # evidence_hash — tampering breaks verify_integrity().
+    mtg_repairs: list = field(default_factory=list)
 
     def _legacy_payload(self) -> str:
         return _canonical({
@@ -131,6 +136,7 @@ class Receipt:
             "arabic_preserved": self.arabic_preserved,
             "arg_integrity_score": self.arg_integrity_score,
             "mtg_violations": self.mtg_violations,
+            "mtg_repairs": self.mtg_repairs,
         }
         populated = any(
             v not in (None, "", [], {}) for v in evidence.values()

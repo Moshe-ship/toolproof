@@ -120,18 +120,27 @@ def receipt_from_mtg_run(
     """
     per_param: dict[str, dict] = {k: _as_dict(v) for k, v in guards.items()}
     collected: list[dict] = []
+    collected_repairs: list[dict] = []
     dialect_expected: Optional[str] = None
     dialect_observed: Optional[str] = None
     best_dialect_conf: float = -1.0
     arabic_preserved: Optional[bool] = None
     integrity_scores: list[float] = []
 
-    for guard in per_param.values():
+    for param_name, guard in per_param.items():
         spec = guard.get("spec") or {}
         pre = guard.get("pre_call_violations", []) or []
         post = guard.get("post_call_violations", []) or []
         for item in list(pre) + list(post):
             collected.append(_as_dict(item))
+
+        # MTG v0.2.0+: reconciled-mode repair suggestions. Each repair is
+        # tagged with the parameter name so the receipt records which
+        # argument the proposal applies to.
+        for repair in guard.get("repairs", []) or []:
+            r = _as_dict(repair)
+            r.setdefault("param", param_name)
+            collected_repairs.append(r)
 
         analysis = guard.get("analysis") or {}
         det = analysis.get("dialect_detected")
@@ -180,6 +189,7 @@ def receipt_from_mtg_run(
         response=response,
         source="mtg",
         mtg_violations=collected,
+        mtg_repairs=collected_repairs,
         outcome=outcome,
         hash_prev=prev_receipt_hash,
         dialect_expected=dialect_expected,

@@ -2,6 +2,19 @@
 
 All notable changes to ToolProof.
 
+## 0.5.2 — MTG reconciled-mode repair delta
+
+### Added
+
+- `Receipt.mtg_repairs` field — list of reconciled-mode repair suggestions emitted by MTG's `suggest_repairs`, tagged per parameter. Each entry is the full `RepairSuggestion.to_dict()` payload plus a `param` key naming which argument the repair applies to.
+- `evidence_hash` now covers `mtg_repairs` in addition to the existing MTG fields. Tampering with the repair list after signing trips `verify_integrity()`.
+- `mtg_bridge.receipt_from_mtg_run` forwards `guards[param]["repairs"]` from the MTG pipeline into `Receipt.mtg_repairs`.
+- Regression tests (`test_evidence_hash.py`) covering repair-list tampering and the bridge-forwarding path.
+
+### Design notes
+
+- Backward-compatible with 0.5.0/0.5.1 receipts — `mtg_repairs` defaults to empty list, and evidence_hash on pre-0.5.2 receipts (no repairs populated) computes the same value as before.
+
 ## 0.5.1 — cross-repo integration + review hardening
 
 ### Added
