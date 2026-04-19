@@ -27,3 +27,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["toolproof*"]
 exclude = ["content*", "downloads*", "openclaw*", "tests*"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: cross-repo integration test (needs mtg + hurmoz checkouts)",
+]
