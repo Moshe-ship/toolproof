@@ -106,9 +106,13 @@ def receipt_from_mtg_run(
     """Build a ToolProof receipt from a full MTG pipeline run.
 
     `guards` is a mapping of parameter-name → GuardResult-dict (or a
-    GuardResult dataclass with .to_dict()). Each guard result contributes
-    its violations, dialect expectations, and morph analysis to the
-    receipt's MTG fields.
+    GuardResult dataclass with .to_dict()). Each guard result SHOULD carry
+    a nested `spec` dict (populated by the adapter) — without it, the bridge
+    cannot reliably resolve dialect_expected or filter dialect_observed to
+    Arabic slots.
+
+    Each guard contributes its violations, dialect expectations, and morph
+    analysis to the receipt's MTG fields.
 
     If `violations` is provided explicitly, it augments the per-guard
     violations (useful when callers have top-level, non-parameter-scoped
@@ -118,10 +122,12 @@ def receipt_from_mtg_run(
     collected: list[dict] = []
     dialect_expected: Optional[str] = None
     dialect_observed: Optional[str] = None
+    best_dialect_conf: float = -1.0
     arabic_preserved: Optional[bool] = None
     integrity_scores: list[float] = []
 
     for guard in per_param.values():
+        spec = guard.get("spec") or {}
         pre = guard.get("pre_call_violations", []) or []
         post = guard.get("post_call_violations", []) or []
         for item in list(pre) + list(post):
@@ -129,16 +135,31 @@ def receipt_from_mtg_run(
 
         analysis = guard.get("analysis") or {}
         det = analysis.get("dialect_detected")
-        if det and dialect_observed is None:
+        conf = float(analysis.get("dialect_confidence", 0.0) or 0.0)
+
+        # dialect_observed: pick from the Arabic slot with the highest
+        # dialect_confidence. If no spec is attached, fall back to the first
+        # non-"unknown" dialect_detected encountered, for legacy callers.
+        slot_is_arabic = spec.get("script") == "ar"
+        if slot_is_arabic and det and det != "unknown" and conf > best_dialect_conf:
+            dialect_observed = det
+            best_dialect_conf = conf
+        elif dialect_observed is None and not spec and det and det != "unknown":
             dialect_observed = det
 
-        # arabic_preserved: any SCRIPT_VIOLATION or SURFACE_CORRUPTION implies False
+        # dialect_expected: prefer the first spec with a concrete Arabic dialect.
+        if dialect_expected is None:
+            de = spec.get("dialect_expected")
+            if de and de != "any":
+                dialect_expected = de
+
+        # arabic_preserved: any SCRIPT/TRANSLIT/CORRUPTION violation implies False
         codes = {v.get("code") for v in list(pre) + list(post)}
         if codes & {"SCRIPT_VIOLATION", "SURFACE_CORRUPTION_POST_CALL", "TRANSLITERATION_VIOLATION"}:
             arabic_preserved = False
         elif arabic_preserved is None:
-            # keep track; set to True only if the slot had any Arabic expectation
-            if det or (analysis.get("script_detected") == "ar"):
+            # Set to True only if the slot had an Arabic expectation that passed
+            if slot_is_arabic or (analysis.get("script_detected") == "ar"):
                 arabic_preserved = True
 
         # arg_integrity_score: 1.0 - (worst_severity_rank / max_rank) per guard
@@ -148,15 +169,6 @@ def receipt_from_mtg_run(
 
     if violations:
         collected.extend(_as_dict(v) for v in violations)
-
-    # Extract dialect_expected from any guard whose mode was declared —
-    # MTG stores it in the spec, not the guard result. Callers that want
-    # this field set explicitly should pass it as part of the guard result.
-    for guard in per_param.values():
-        de = guard.get("dialect_expected") or (guard.get("spec") or {}).get("dialect_expected")
-        if de and de != "any":
-            dialect_expected = de
-            break
 
     outcome = _outcome_from_violations(collected)
     integrity = min(integrity_scores) if integrity_scores else 1.0

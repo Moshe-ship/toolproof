@@ -1,10 +1,10 @@
-# ToolProof v0.4.0
+# ToolProof v0.5.0
 
-**Agent tool verification. Pre-execution gating. Eval-driven optimization.**
+**Agent tool verification. Pre-execution gating. Eval-driven optimization. MTG (Morphological Type Guards) integration for Arabic tool-call integrity.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
-[![Tests: 71 passing](https://img.shields.io/badge/tests-71%20passing-green.svg)]()
+[![Tests: 95 passing](https://img.shields.io/badge/tests-95%20passing-green.svg)]()
 [![OpenClaw Plugin](https://img.shields.io/badge/OpenClaw-native%20plugin-orange.svg)]()
 
 > Agents lie about tool calls. ToolProof catches them before and after execution.

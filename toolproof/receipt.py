@@ -88,15 +88,17 @@ class Receipt:
     cache_read: int = 0
     cost_usd: float = 0.0
     # Cryptographic signatures
-    hash: str = ""
+    hash: str = ""                  # legacy-core hash (tool/args/response/error/ts)
     hmac_sig: str = ""
+    evidence_hash: str = ""         # covers MTG evidence fields; empty if none populated
     # Source tracking
     source: str = ""  # "openclaw", "claude", "hermes", "proxy", "sdk"
     session_id: str = ""
-    # MTG (Morphological Type Guards) integration — additive, optional.
+    # MTG (Morphological Type Guards) integration.
     # Populated by toolproof.mtg_bridge when consuming MTG pipeline output.
-    # NOT included in sign()'s canonical hash so existing 0.4.x receipts
-    # remain hash-compatible.
+    # These fields are covered by evidence_hash (not the legacy `hash`) so
+    # that 0.4.x hash compatibility is preserved AND MTG evidence is
+    # tamper-evident in 0.5.0+.
     outcome: Optional[str] = None           # 'pass' | 'partial' | 'fail'
     hash_prev: Optional[str] = None         # previous receipt hash in MTG chain
     dialect_expected: Optional[str] = None  # from GuardSpec
@@ -105,40 +107,80 @@ class Receipt:
     arg_integrity_score: Optional[float] = None
     mtg_violations: list = field(default_factory=list)
 
-    def sign(self, secret: Optional[str] = None) -> None:
-        """Compute hash and optional HMAC signature."""
-        payload = _canonical({
+    def _legacy_payload(self) -> str:
+        return _canonical({
             "tool_name": self.tool_name,
             "arguments": self.arguments,
             "response": self.response,
             "error": self.error,
             "timestamp": self.timestamp,
         })
-        self.hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    def _evidence_payload(self) -> str:
+        """Canonical JSON of MTG evidence fields.
+
+        Returns empty string if no MTG field is populated — in that case
+        evidence_hash is also empty and verify_integrity() doesn't require
+        one, preserving backward compatibility with pre-MTG receipts.
+        """
+        evidence = {
+            "outcome": self.outcome,
+            "hash_prev": self.hash_prev,
+            "dialect_expected": self.dialect_expected,
+            "dialect_observed": self.dialect_observed,
+            "arabic_preserved": self.arabic_preserved,
+            "arg_integrity_score": self.arg_integrity_score,
+            "mtg_violations": self.mtg_violations,
+        }
+        populated = any(
+            v not in (None, "", [], {}) for v in evidence.values()
+        )
+        if not populated:
+            return ""
+        return _canonical(evidence)
+
+    def sign(self, secret: Optional[str] = None) -> None:
+        """Compute legacy hash, evidence hash, and optional HMAC signature.
+
+        The legacy hash covers tool/args/response/error/timestamp (0.4.x
+        compatible). The evidence hash, when any MTG field is populated,
+        covers outcome, hash_prev, dialect_expected, dialect_observed,
+        arabic_preserved, arg_integrity_score, and mtg_violations. Tampering
+        either region after signing will fail verify_integrity().
+        """
+        legacy = self._legacy_payload()
+        self.hash = hashlib.sha256(legacy.encode("utf-8")).hexdigest()
+
+        evidence = self._evidence_payload()
+        self.evidence_hash = (
+            hashlib.sha256(evidence.encode("utf-8")).hexdigest() if evidence else ""
+        )
+
         if secret:
             self.hmac_sig = hmac.new(
                 secret.encode("utf-8"),
-                payload.encode("utf-8"),
+                (legacy + evidence).encode("utf-8"),
                 hashlib.sha256,
             ).hexdigest()
 
     def verify_integrity(self, secret: Optional[str] = None) -> bool:
-        """Check that the receipt has not been tampered with."""
-        payload = _canonical({
-            "tool_name": self.tool_name,
-            "arguments": self.arguments,
-            "response": self.response,
-            "error": self.error,
-            "timestamp": self.timestamp,
-        })
-        expected_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-        # SECURITY: use timing-safe comparison to prevent timing oracle attacks
+        """Check that neither the legacy core nor the MTG evidence was tampered."""
+        legacy = self._legacy_payload()
+        expected_hash = hashlib.sha256(legacy.encode("utf-8")).hexdigest()
         if not hmac.compare_digest(expected_hash, self.hash):
             return False
+
+        evidence = self._evidence_payload()
+        expected_evidence = (
+            hashlib.sha256(evidence.encode("utf-8")).hexdigest() if evidence else ""
+        )
+        if not hmac.compare_digest(expected_evidence, self.evidence_hash or ""):
+            return False
+
         if secret and self.hmac_sig:
             expected_hmac = hmac.new(
                 secret.encode("utf-8"),
-                payload.encode("utf-8"),
+                (legacy + evidence).encode("utf-8"),
                 hashlib.sha256,
             ).hexdigest()
             if not hmac.compare_digest(expected_hmac, self.hmac_sig):
