@@ -97,6 +97,34 @@ def test_tampering_legacy_fields_still_caught():
     assert not receipt.verify_integrity()
 
 
+def test_tampering_product_evidence_breaks_verify():
+    """Product/API evidence rows must be independently integrity-protected.
+
+    LocalBiz Agent API receipts use Receipt.evidence for the source rows behind
+    a claim. Mutating those rows after signing must break verification even if
+    the legacy response body is untouched.
+    """
+    receipt = Receipt(
+        tool_name="audit_nap",
+        arguments={"business": "Speedy Way Auto Transport"},
+        response={"found": 3, "not_found": 6},
+        evidence=[
+            {
+                "source": "Bing Places",
+                "type": "citation_directory_check",
+                "status": "found",
+            }
+        ],
+        timestamp=1700000000.0,
+    )
+    receipt.sign(secret="shared")
+    assert receipt.evidence_hash
+    assert receipt.verify_integrity(secret="shared")
+
+    receipt.evidence[0]["status"] = "not_found"
+    assert not receipt.verify_integrity(secret="shared")
+
+
 def test_hmac_with_secret_covers_both_regions(monkeypatch):
     receipt = _build_mtg_receipt()
     receipt.sign(secret="shared")

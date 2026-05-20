@@ -94,6 +94,10 @@ class Receipt:
     # Source tracking
     source: str = ""  # "openclaw", "claude", "hermes", "proxy", "sdk"
     session_id: str = ""
+    # Product/tool evidence bound separately from the legacy response hash.
+    # This lets APIs expose a compact evidence array while making that evidence
+    # independently tamper-evident in receipts.
+    evidence: list = field(default_factory=list)
     # MTG (Morphological Type Guards) integration.
     # Populated by toolproof.mtg_bridge when consuming MTG pipeline output.
     # These fields are covered by evidence_hash (not the legacy `hash`) so
@@ -129,6 +133,7 @@ class Receipt:
         one, preserving backward compatibility with pre-MTG receipts.
         """
         evidence = {
+            "evidence": self.evidence,
             "outcome": self.outcome,
             "hash_prev": self.hash_prev,
             "dialect_expected": self.dialect_expected,
