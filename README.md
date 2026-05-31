@@ -1,5 +1,8 @@
 # ToolProof v0.5.0
 
+> Part of the [**Mizan**](https://github.com/Moshe-ship/mizan) stack — the Arabic-first reliability scale for AI agents.
+
+
 **Agent tool verification. Pre-execution gating. Eval-driven optimization. MTG (Morphological Type Guards) integration for Arabic tool-call integrity.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
