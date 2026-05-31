@@ -17,6 +17,11 @@ dependencies = [
     "click>=8.0.0",
 ]
 
+readme = "README.md"
+[project.urls]
+Source = "https://github.com/Moshe-ship/toolproof"
+Issues = "https://github.com/Moshe-ship/toolproof/issues"
+
 [project.scripts]
 toolproof = "toolproof.cli:main"
 
