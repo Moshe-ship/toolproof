@@ -5,6 +5,7 @@
 
 **Agent tool verification. Pre-execution gating. Eval-driven optimization. MTG (Morphological Type Guards) integration for Arabic tool-call integrity.**
 
+[![PyPI](https://img.shields.io/pypi/v/toolproof-receipt)](https://pypi.org/project/toolproof-receipt/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
 [![Tests: 95 passing](https://img.shields.io/badge/tests-95%20passing-green.svg)]()
@@ -30,7 +31,7 @@ ToolProof does two things:
 ## Install
 
 ```bash
-pip install toolproof
+pip install toolproof-receipt   # PyPI name; import as `toolproof`
 ```
 
 ## Quick Start
