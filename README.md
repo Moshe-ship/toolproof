@@ -8,7 +8,7 @@
 [![PyPI](https://img.shields.io/pypi/v/toolproof-receipt)](https://pypi.org/project/toolproof-receipt/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-green.svg)](https://python.org)
-[![Tests: 95 passing](https://img.shields.io/badge/tests-95%20passing-green.svg)]()
+[![CI](https://github.com/Moshe-ship/toolproof/actions/workflows/ci.yml/badge.svg)](https://github.com/Moshe-ship/toolproof/actions/workflows/ci.yml)
 [![OpenClaw Plugin](https://img.shields.io/badge/OpenClaw-native%20plugin-orange.svg)]()
 
 > Agents lie about tool calls. ToolProof catches them before and after execution.
