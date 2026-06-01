@@ -1,7 +1,7 @@
 [project]
 # PyPI distribution name (the bare "toolproof" is reserved/blocked on PyPI).
 # The import name and CLI stay `toolproof`.
-name = "toolproof-receipts"
+name = "toolproof-receipt"
 version = "0.5.2"
 description = "Agent tool verification - catch hallucinated tool calls with signed execution receipts, now with MTG (Morphological Type Guards) integration"
 requires-python = ">=3.9"
