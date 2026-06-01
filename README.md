@@ -1,4 +1,4 @@
-# ToolProof v0.5.0
+# ToolProof
 
 > Part of the [**Mizan**](https://github.com/Moshe-ship/mizan) stack — the Arabic-first reliability scale for AI agents.
 
